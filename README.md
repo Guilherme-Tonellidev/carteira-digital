@@ -6,7 +6,7 @@ API REST de carteira digital: o usuário cria uma conta, deposita, saca e transf
 
 ## Stack
 
-Java 21 · Spring Boot · Spring Data JPA · Spring Security (JWT) · PostgreSQL · Flyway · Docker Compose
+Java 21 · Spring Boot · Spring Data JPA · Spring Security (JWT) · PostgreSQL · Flyway · Docker Compose · JUnit 5 · Testcontainers
 
 ## Como rodar
 
@@ -67,6 +67,21 @@ Exceto `POST /users`, `POST /auth/login` e `/actuator/health`, todas as rotas ex
 
 Depósito, saque e transferência aceitam o cabeçalho opcional `Idempotency-Key`: reenviar a mesma operação com a mesma chave devolve a transação original, sem mexer no saldo outra vez. Erros seguem o formato `ProblemDetail` (RFC 7807). O arquivo `requests.http` tem exemplos prontos para a extensão REST Client do VS Code.
 
+## Testes
+
+```bash
+mvn test
+```
+
+Precisa do Docker rodando: os testes de integração sobem um PostgreSQL descartável com Testcontainers, então as migrations do Flyway também são exercitadas de verdade.
+
+| Classe | O que cobre |
+|---|---|
+| `WalletTest` | regras do saldo (sem Spring e sem banco): valores inválidos, saldo insuficiente, casas decimais |
+| `WalletServiceIntegrationTest` | depósito, saque, transferência (inclusive falhas sem efeito colateral), idempotência, dono da carteira, extrato com paginação e filtros, trigger de imutabilidade e CHECK de saldo no banco |
+| `WalletConcurrencyIntegrationTest` | 10 saques simultâneos (só 5 passam), 20 transferências cruzadas sem deadlock com o total conservado e depósitos duplicados com a mesma `Idempotency-Key` |
+| `ApiIntegrationTest` | API por HTTP real: 401, 403, 404, 409, 422 e 400, fluxo depósito, transferência e extrato |
+
 ## Roadmap
 
 - [x] Estrutura do projeto, Docker Compose e migration inicial
@@ -74,6 +89,6 @@ Depósito, saque e transferência aceitam o cabeçalho opcional `Idempotency-Key
 - [x] Transferência com controle de concorrência
 - [x] Autenticação com JWT
 - [x] Extrato paginado
-- [ ] Testes de integração e teste de concorrência
+- [x] Testes de integração e teste de concorrência
 - [ ] Documentação da API (Swagger)
 - [ ] Front-end em React
