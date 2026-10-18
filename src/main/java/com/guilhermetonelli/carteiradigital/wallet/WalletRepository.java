@@ -13,6 +13,8 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
     Optional<Wallet> findByUserId(UUID userId);
 
+    boolean existsByIdAndUserId(UUID id, UUID userId);
+
     /**
      * Busca a carteira com lock de escrita (SELECT ... FOR UPDATE): qualquer outra transação
      * que tente alterar a mesma carteira fica esperando esta terminar.

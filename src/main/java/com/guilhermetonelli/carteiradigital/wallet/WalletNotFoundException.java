@@ -4,7 +4,11 @@ import java.util.UUID;
 
 public class WalletNotFoundException extends RuntimeException {
 
+    public WalletNotFoundException(String message) {
+        super(message);
+    }
+
     public WalletNotFoundException(UUID id) {
-        super("Carteira não encontrada: " + id);
+        this("Carteira não encontrada: " + id);
     }
 }

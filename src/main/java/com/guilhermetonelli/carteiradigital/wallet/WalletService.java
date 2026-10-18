@@ -12,6 +12,10 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Todas as operações recebem o id do usuário autenticado ({@code userId}) e só permitem
+ * mexer em carteiras que pertencem a ele.
+ */
 @Service
 public class WalletService {
 
@@ -26,7 +30,14 @@ public class WalletService {
     }
 
     @Transactional(readOnly = true)
-    public Wallet getWallet(UUID walletId) {
+    public Wallet getOwnWallet(UUID userId) {
+        return wallets.findByUserId(userId)
+                .orElseThrow(() -> new WalletNotFoundException("Nenhuma carteira encontrada para o usuário autenticado"));
+    }
+
+    @Transactional(readOnly = true)
+    public Wallet getWallet(UUID userId, UUID walletId) {
+        requireOwner(walletId, userId);
         return wallets.findById(walletId).orElseThrow(() -> new WalletNotFoundException(walletId));
     }
 
@@ -36,8 +47,9 @@ public class WalletService {
      * resultado da primeira (inclusive uma Idempotency-Key repetida).
      */
     @Transactional
-    public Transaction deposit(UUID walletId, BigDecimal amount, String idempotencyKey) {
+    public Transaction deposit(UUID userId, UUID walletId, BigDecimal amount, String idempotencyKey) {
         String key = normalizeKey(idempotencyKey);
+        requireOwner(walletId, userId);
         Wallet wallet = lockWallet(walletId);
 
         Optional<Transaction> replay = findReplay(walletId, key, TransactionType.DEPOSIT, amount);
@@ -50,8 +62,9 @@ public class WalletService {
     }
 
     @Transactional
-    public Transaction withdraw(UUID walletId, BigDecimal amount, String idempotencyKey) {
+    public Transaction withdraw(UUID userId, UUID walletId, BigDecimal amount, String idempotencyKey) {
         String key = normalizeKey(idempotencyKey);
+        requireOwner(walletId, userId);
         Wallet wallet = lockWallet(walletId);
 
         Optional<Transaction> replay = findReplay(walletId, key, TransactionType.WITHDRAWAL, amount);
@@ -64,15 +77,19 @@ public class WalletService {
     }
 
     /**
-     * Debita a origem e credita o destino na mesma transação: ou acontecem os dois, ou nenhum.
+     * Debita a origem (que precisa ser do usuário autenticado) e credita o destino (qualquer
+     * carteira existente) na mesma transação: ou acontecem os dois, ou nenhum.
      * A chave de idempotência pertence à carteira de origem.
      */
     @Transactional
-    public Transaction transfer(UUID sourceId, UUID targetId, BigDecimal amount, String idempotencyKey) {
+    public Transaction transfer(UUID userId, UUID sourceId, UUID targetId, BigDecimal amount, String idempotencyKey) {
         if (sourceId.equals(targetId)) {
             throw new InvalidRequestException("A carteira de origem e a de destino devem ser diferentes");
         }
         String key = normalizeKey(idempotencyKey);
+
+        // Confere o dono ANTES de travar, para quem não é dono não conseguir segurar o lock de uma carteira alheia.
+        requireOwner(sourceId, userId);
 
         // Anti-deadlock: as duas carteiras são sempre travadas na mesma ordem (menor id primeiro),
         // não importa quem é origem ou destino. Sem isso, A->B e B->A ao mesmo tempo poderiam
@@ -96,6 +113,16 @@ public class WalletService {
         source.debit(amount);
         target.credit(amount);
         return transactions.save(Transaction.transfer(source, target, amount, key));
+    }
+
+    private void requireOwner(UUID walletId, UUID userId) {
+        if (wallets.existsByIdAndUserId(walletId, userId)) {
+            return;
+        }
+        if (!wallets.existsById(walletId)) {
+            throw new WalletNotFoundException(walletId);
+        }
+        throw new WalletAccessDeniedException();
     }
 
     private Wallet lockWallet(UUID walletId) {

@@ -1,9 +1,10 @@
 # Requisições de teste para a extensão "REST Client" (humao.rest-client) do VS Code.
-# Clique em "Send Request" acima de cada bloco, na ordem.
+# Clique em "Send Request" acima de cada bloco, na ordem (os blocos usam o resultado dos anteriores).
+# Se os e-mails já existirem de uma execução anterior, o cadastro dá 409: troque os e-mails.
 
 @baseUrl = http://localhost:8080
 
-### 1. Criar usuário (a carteira é criada junto). Rodando de novo com o mesmo e-mail dá 409.
+### 1. Criar a Ana (a carteira é criada junto)
 # @name createUser
 POST {{baseUrl}}/users
 Content-Type: application/json
@@ -14,52 +15,17 @@ Content-Type: application/json
   "password": "senha1234"
 }
 
-### 2. Consultar a carteira (saldo 0.00)
-GET {{baseUrl}}/wallets/{{createUser.response.body.walletId}}
-
-### 3. Depositar 100,50
-POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
-Content-Type: application/json
-Idempotency-Key: dep-001
-
-{ "amount": 100.50 }
-
-### 4. Reenviar o MESMO depósito (mesma Idempotency-Key): devolve a operação original, saldo não muda
-POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
-Content-Type: application/json
-Idempotency-Key: dep-001
-
-{ "amount": 100.50 }
-
-### 5. Sacar 30
-POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/withdraw
+### 2. Login da Ana: devolve o token JWT
+# @name login
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
-{ "amount": 30 }
+{
+  "email": "ana@email.com",
+  "password": "senha1234"
+}
 
-### 6. Saque maior que o saldo: 422 Saldo insuficiente
-POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/withdraw
-Content-Type: application/json
-
-{ "amount": 9999 }
-
-### 7. Valor inválido (3 casas decimais): 400 Dados inválidos
-POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
-Content-Type: application/json
-
-{ "amount": 10.555 }
-
-### 8. Idempotency-Key reutilizada com outro valor: 422
-POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
-Content-Type: application/json
-Idempotency-Key: dep-001
-
-{ "amount": 5 }
-
-### 9. Carteira inexistente: 404
-GET {{baseUrl}}/wallets/00000000-0000-0000-0000-000000000000
-
-### 10. Criar um segundo usuário (destino das transferências)
+### 3. Criar o Bruno
 # @name createUser2
 POST {{baseUrl}}/users
 Content-Type: application/json
@@ -70,8 +36,68 @@ Content-Type: application/json
   "password": "senha1234"
 }
 
-### 11. Transferir 20 da Ana para o Bruno
+### 4. Login do Bruno
+# @name login2
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "bruno@email.com",
+  "password": "senha1234"
+}
+
+### 5. Minha carteira (Ana): saldo 0.00
+GET {{baseUrl}}/wallets/me
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 6. Ana deposita 100,50
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+Idempotency-Key: dep-001
+
+{ "amount": 100.50 }
+
+### 7. Mesmo depósito reenviado (mesma Idempotency-Key): devolve a operação original, saldo não muda
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+Idempotency-Key: dep-001
+
+{ "amount": 100.50 }
+
+### 8. Ana saca 30
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/withdraw
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+{ "amount": 30 }
+
+### 9. Saque maior que o saldo: 422
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/withdraw
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+{ "amount": 9999 }
+
+### 10. Valor inválido (3 casas decimais): 400
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+{ "amount": 10.555 }
+
+### 11. Idempotency-Key reutilizada com outro valor: 422
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+Idempotency-Key: dep-001
+
+{ "amount": 5 }
+
+### 12. Ana transfere 20 para o Bruno
 POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/transfer
+Authorization: Bearer {{login.response.body.accessToken}}
 Content-Type: application/json
 Idempotency-Key: tr-001
 
@@ -80,11 +106,13 @@ Idempotency-Key: tr-001
   "amount": 20
 }
 
-### 12. Saldo do Bruno (deve ter 20.00)
-GET {{baseUrl}}/wallets/{{createUser2.response.body.walletId}}
+### 13. Carteira do Bruno (com o token dele): saldo 20.00
+GET {{baseUrl}}/wallets/me
+Authorization: Bearer {{login2.response.body.accessToken}}
 
-### 13. Transferência maior que o saldo da Ana: 422
+### 14. Transferência maior que o saldo: 422
 POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/transfer
+Authorization: Bearer {{login.response.body.accessToken}}
 Content-Type: application/json
 
 {
@@ -92,8 +120,9 @@ Content-Type: application/json
   "amount": 99999
 }
 
-### 14. Transferir para a própria carteira: 400
+### 15. Transferir para a própria carteira: 400
 POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/transfer
+Authorization: Bearer {{login.response.body.accessToken}}
 Content-Type: application/json
 
 {
@@ -101,11 +130,35 @@ Content-Type: application/json
   "amount": 10
 }
 
-### 15. Carteira de destino inexistente: 404
+### 16. Carteira de destino inexistente: 404
 POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/transfer
+Authorization: Bearer {{login.response.body.accessToken}}
 Content-Type: application/json
 
 {
   "targetWalletId": "00000000-0000-0000-0000-000000000000",
   "amount": 10
+}
+
+### 17. SEM token: 401
+GET {{baseUrl}}/wallets/me
+
+### 18. Ana tentando ver a carteira do Bruno: 403
+GET {{baseUrl}}/wallets/{{createUser2.response.body.walletId}}
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 19. Ana tentando sacar da carteira do Bruno: 403
+POST {{baseUrl}}/wallets/{{createUser2.response.body.walletId}}/withdraw
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+{ "amount": 1 }
+
+### 20. Login com senha errada: 401
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "ana@email.com",
+  "password": "senha-errada"
 }

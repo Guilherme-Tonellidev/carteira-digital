@@ -1,8 +1,10 @@
 package com.guilhermetonelli.carteiradigital.common;
 
+import com.guilhermetonelli.carteiradigital.auth.InvalidCredentialsException;
 import com.guilhermetonelli.carteiradigital.transaction.IdempotencyKeyReuseException;
 import com.guilhermetonelli.carteiradigital.user.EmailAlreadyUsedException;
 import com.guilhermetonelli.carteiradigital.wallet.InsufficientBalanceException;
+import com.guilhermetonelli.carteiradigital.wallet.WalletAccessDeniedException;
 import com.guilhermetonelli.carteiradigital.wallet.WalletNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -43,6 +45,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler(IdempotencyKeyReuseException.class)
     public ProblemDetail handleIdempotencyKeyReuse(IdempotencyKeyReuseException ex) {
         return problem(HttpStatus.UNPROCESSABLE_CONTENT, "Idempotency-Key reutilizada", ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
+        return problem(HttpStatus.UNAUTHORIZED, "Credenciais inválidas", ex.getMessage());
+    }
+
+    @ExceptionHandler(WalletAccessDeniedException.class)
+    public ProblemDetail handleWalletAccessDenied(WalletAccessDeniedException ex) {
+        return problem(HttpStatus.FORBIDDEN, "Acesso negado", ex.getMessage());
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
