@@ -48,6 +48,13 @@ public class Transaction {
     @JoinColumn(name = "target_wallet_id", updatable = false)
     private Wallet targetWallet;
 
+    // Colunas só de leitura: permitem ler os ids sem carregar as carteiras (evita consultas extras no extrato).
+    @Column(name = "source_wallet_id", insertable = false, updatable = false)
+    private UUID sourceWalletId;
+
+    @Column(name = "target_wallet_id", insertable = false, updatable = false)
+    private UUID targetWalletId;
+
     @Column(nullable = false, precision = 19, scale = 2, updatable = false)
     private BigDecimal amount;
 
@@ -67,6 +74,8 @@ public class Transaction {
         this.status = TransactionStatus.COMPLETED;
         this.sourceWallet = sourceWallet;
         this.targetWallet = targetWallet;
+        this.sourceWalletId = sourceWallet != null ? sourceWallet.getId() : null;
+        this.targetWalletId = targetWallet != null ? targetWallet.getId() : null;
         this.amount = amount;
         this.idempotencyKey = idempotencyKey;
     }
@@ -106,6 +115,14 @@ public class Transaction {
 
     public Wallet getTargetWallet() {
         return targetWallet;
+    }
+
+    public UUID getSourceWalletId() {
+        return sourceWalletId;
+    }
+
+    public UUID getTargetWalletId() {
+        return targetWalletId;
     }
 
     public BigDecimal getAmount() {

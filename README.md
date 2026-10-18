@@ -44,6 +44,7 @@ users 1 ──── 1 wallets 1 ──── N transactions
 - **Regras também no banco**: saldo não negativo, valor positivo e coerência origem/destino por tipo ficam em `CHECK`, como segunda linha de defesa além do código.
 - **Histórico imutável**: correções são feitas com novas transações, nunca editando as antigas.
 - **Idempotência**: índice único por (carteira, `idempotency_key`) para que um reenvio não duplique a operação.
+- **Extrato**: paginado (`page`/`size`, máximo 100 por página), do mais recente para o mais antigo, com filtro por tipo e por período (`from`/`to` inclusivos, no fuso de São Paulo). Cada item traz `direction` (`CREDIT` ou `DEBIT`) do ponto de vista da carteira consultada.
 - **Autenticação stateless com JWT** (HS256, Spring Security OAuth2 Resource Server): o login devolve um token com o id do usuário e validade de 1 hora; senhas são guardadas com BCrypt. A mensagem de erro do login é a mesma para e-mail inexistente e senha errada.
 - **Concorrência**: toda operação trava a(s) carteira(s) com `SELECT ... FOR UPDATE` (lock pessimista) antes de mexer no saldo, então requisições simultâneas na mesma carteira são serializadas. Na transferência as duas carteiras são travadas sempre em ordem de id, o que evita deadlock em transferências cruzadas (A para B e B para A ao mesmo tempo). O `@Version` fica como rede de segurança.
 - **Teste de concorrência manual**: com a aplicação rodando, `powershell -ExecutionPolicy Bypass -File .\scripts\teste-concorrencia.ps1` dispara requisições simultâneas e confere saldos e códigos HTTP.
@@ -59,6 +60,7 @@ users 1 ──── 1 wallets 1 ──── N transactions
 | `GET` | `/wallets/{id}` | Consulta o saldo (só da própria carteira; `403` nas dos outros) |
 | `POST` | `/wallets/{id}/deposit` | Deposita (`{"amount": 100.50}`) |
 | `POST` | `/wallets/{id}/withdraw` | Saca; `422` se o saldo for insuficiente |
+| `GET` | `/wallets/{id}/transactions` | Extrato paginado; filtros opcionais `type`, `from`, `to`, `page`, `size` |
 | `POST` | `/wallets/{id}/transfer` | Transfere para outra carteira (`{"targetWalletId": "...", "amount": 20}`) |
 
 Exceto `POST /users`, `POST /auth/login` e `/actuator/health`, todas as rotas exigem o cabeçalho `Authorization: Bearer <token>`. Depósito, saque e a origem da transferência só funcionam na carteira do próprio usuário; o destino da transferência pode ser qualquer carteira.
@@ -71,7 +73,7 @@ Depósito, saque e transferência aceitam o cabeçalho opcional `Idempotency-Key
 - [x] Depósito e saque
 - [x] Transferência com controle de concorrência
 - [x] Autenticação com JWT
-- [ ] Extrato paginado
+- [x] Extrato paginado
 - [ ] Testes de integração e teste de concorrência
 - [ ] Documentação da API (Swagger)
 - [ ] Front-end em React

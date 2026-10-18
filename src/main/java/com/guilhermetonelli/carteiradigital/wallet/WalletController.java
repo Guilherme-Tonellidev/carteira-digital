@@ -1,8 +1,12 @@
 package com.guilhermetonelli.carteiradigital.wallet;
 
 import com.guilhermetonelli.carteiradigital.auth.CurrentUser;
+import com.guilhermetonelli.carteiradigital.common.PageResponse;
+import com.guilhermetonelli.carteiradigital.transaction.StatementEntry;
 import com.guilhermetonelli.carteiradigital.transaction.TransactionResponse;
+import com.guilhermetonelli.carteiradigital.transaction.TransactionType;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,9 +15,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
@@ -35,6 +41,20 @@ public class WalletController {
     @GetMapping("/{id}")
     public WalletResponse get(@PathVariable UUID id, Authentication authentication) {
         return WalletResponse.from(walletService.getWallet(CurrentUser.id(authentication), id));
+    }
+
+    /** Extrato paginado. Exemplo: /wallets/{id}/transactions?type=DEPOSIT&from=2026-10-01&to=2026-10-31&page=0&size=20 */
+    @GetMapping("/{id}/transactions")
+    public PageResponse<StatementEntry> statement(
+            @PathVariable UUID id,
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication) {
+        return PageResponse.from(walletService.getStatement(
+                CurrentUser.id(authentication), id, type, from, to, page, size));
     }
 
     @PostMapping("/{id}/deposit")

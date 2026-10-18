@@ -162,3 +162,36 @@ Content-Type: application/json
   "email": "ana@email.com",
   "password": "senha-errada"
 }
+
+### 21. Pegar o id da carteira da Ana (precisa do login do bloco 2)
+# @name myWallet
+GET {{baseUrl}}/wallets/me
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 22. Extrato completo, mais recente primeiro
+GET {{baseUrl}}/wallets/{{myWallet.response.body.id}}/transactions
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 23. Paginado: 2 por página, página 0 (confira totalElements e totalPages)
+GET {{baseUrl}}/wallets/{{myWallet.response.body.id}}/transactions?page=0&size=2
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 24. Segunda página
+GET {{baseUrl}}/wallets/{{myWallet.response.body.id}}/transactions?page=1&size=2
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 25. Só depósitos
+GET {{baseUrl}}/wallets/{{myWallet.response.body.id}}/transactions?type=DEPOSIT
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 26. Por período (datas inclusivas, fuso de São Paulo)
+GET {{baseUrl}}/wallets/{{myWallet.response.body.id}}/transactions?from=2026-10-01&to=2026-10-31
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 27. Tipo inválido: 400
+GET {{baseUrl}}/wallets/{{myWallet.response.body.id}}/transactions?type=PIX
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### 28. Tamanho de página acima do limite (100): 400
+GET {{baseUrl}}/wallets/{{myWallet.response.body.id}}/transactions?size=1000
+Authorization: Bearer {{login.response.body.accessToken}}

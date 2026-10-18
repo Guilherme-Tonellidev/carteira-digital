@@ -14,6 +14,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -85,6 +86,12 @@ public class ApiExceptionHandler {
     public ProblemDetail handleUnreadableBody(HttpMessageNotReadableException ex) {
         return problem(HttpStatus.BAD_REQUEST, "Corpo inválido",
                 "O corpo da requisição está ausente ou não é um JSON válido.");
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "Parâmetro inválido",
+                "O valor informado para '" + ex.getName() + "' é inválido.");
     }
 
     private static ProblemDetail problem(HttpStatus status, String title, String detail) {
