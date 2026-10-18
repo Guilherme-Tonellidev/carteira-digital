@@ -27,7 +27,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(InsufficientBalanceException.class)
     public ProblemDetail handleInsufficientBalance(InsufficientBalanceException ex) {
-        return problem(HttpStatus.UNPROCESSABLE_ENTITY, "Saldo insuficiente", ex.getMessage());
+        return problem(HttpStatus.UNPROCESSABLE_CONTENT, "Saldo insuficiente", ex.getMessage());
     }
 
     @ExceptionHandler(InvalidRequestException.class)
@@ -42,7 +42,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(IdempotencyKeyReuseException.class)
     public ProblemDetail handleIdempotencyKeyReuse(IdempotencyKeyReuseException ex) {
-        return problem(HttpStatus.UNPROCESSABLE_ENTITY, "Idempotency-Key reutilizada", ex.getMessage());
+        return problem(HttpStatus.UNPROCESSABLE_CONTENT, "Idempotency-Key reutilizada", ex.getMessage());
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
