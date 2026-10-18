@@ -58,3 +58,54 @@ Idempotency-Key: dep-001
 
 ### 9. Carteira inexistente: 404
 GET {{baseUrl}}/wallets/00000000-0000-0000-0000-000000000000
+
+### 10. Criar um segundo usuário (destino das transferências)
+# @name createUser2
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Bruno Lima",
+  "email": "bruno@email.com",
+  "password": "senha1234"
+}
+
+### 11. Transferir 20 da Ana para o Bruno
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/transfer
+Content-Type: application/json
+Idempotency-Key: tr-001
+
+{
+  "targetWalletId": "{{createUser2.response.body.walletId}}",
+  "amount": 20
+}
+
+### 12. Saldo do Bruno (deve ter 20.00)
+GET {{baseUrl}}/wallets/{{createUser2.response.body.walletId}}
+
+### 13. Transferência maior que o saldo da Ana: 422
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/transfer
+Content-Type: application/json
+
+{
+  "targetWalletId": "{{createUser2.response.body.walletId}}",
+  "amount": 99999
+}
+
+### 14. Transferir para a própria carteira: 400
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/transfer
+Content-Type: application/json
+
+{
+  "targetWalletId": "{{createUser.response.body.walletId}}",
+  "amount": 10
+}
+
+### 15. Carteira de destino inexistente: 404
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/transfer
+Content-Type: application/json
+
+{
+  "targetWalletId": "00000000-0000-0000-0000-000000000000",
+  "amount": 10
+}

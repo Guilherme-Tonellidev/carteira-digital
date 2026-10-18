@@ -46,4 +46,14 @@ public class WalletController {
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         return TransactionResponse.from(walletService.withdraw(id, request.amount(), idempotencyKey));
     }
+
+    @PostMapping("/{id}/transfer")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TransactionResponse transfer(
+            @PathVariable UUID id,
+            @Valid @RequestBody TransferRequest request,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        return TransactionResponse.from(
+                walletService.transfer(id, request.targetWalletId(), request.amount(), idempotencyKey));
+    }
 }

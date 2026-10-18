@@ -27,17 +27,18 @@ public class WalletService {
 
     @Transactional(readOnly = true)
     public Wallet getWallet(UUID walletId) {
-        return findWallet(walletId);
+        return wallets.findById(walletId).orElseThrow(() -> new WalletNotFoundException(walletId));
     }
 
     /**
-     * Se a mesma Idempotency-Key já foi usada com o mesmo valor, devolve a operação
-     * original em vez de depositar de novo.
+     * A carteira é travada (FOR UPDATE) antes de qualquer verificação. Assim, duas requisições
+     * simultâneas na mesma carteira são executadas uma de cada vez, e a segunda já enxerga o
+     * resultado da primeira (inclusive uma Idempotency-Key repetida).
      */
     @Transactional
     public Transaction deposit(UUID walletId, BigDecimal amount, String idempotencyKey) {
         String key = normalizeKey(idempotencyKey);
-        Wallet wallet = findWallet(walletId);
+        Wallet wallet = lockWallet(walletId);
 
         Optional<Transaction> replay = findReplay(walletId, key, TransactionType.DEPOSIT, amount);
         if (replay.isPresent()) {
@@ -51,7 +52,7 @@ public class WalletService {
     @Transactional
     public Transaction withdraw(UUID walletId, BigDecimal amount, String idempotencyKey) {
         String key = normalizeKey(idempotencyKey);
-        Wallet wallet = findWallet(walletId);
+        Wallet wallet = lockWallet(walletId);
 
         Optional<Transaction> replay = findReplay(walletId, key, TransactionType.WITHDRAWAL, amount);
         if (replay.isPresent()) {
@@ -62,8 +63,43 @@ public class WalletService {
         return transactions.save(Transaction.withdrawal(wallet, amount, key));
     }
 
-    private Wallet findWallet(UUID walletId) {
-        return wallets.findById(walletId).orElseThrow(() -> new WalletNotFoundException(walletId));
+    /**
+     * Debita a origem e credita o destino na mesma transação: ou acontecem os dois, ou nenhum.
+     * A chave de idempotência pertence à carteira de origem.
+     */
+    @Transactional
+    public Transaction transfer(UUID sourceId, UUID targetId, BigDecimal amount, String idempotencyKey) {
+        if (sourceId.equals(targetId)) {
+            throw new InvalidRequestException("A carteira de origem e a de destino devem ser diferentes");
+        }
+        String key = normalizeKey(idempotencyKey);
+
+        // Anti-deadlock: as duas carteiras são sempre travadas na mesma ordem (menor id primeiro),
+        // não importa quem é origem ou destino. Sem isso, A->B e B->A ao mesmo tempo poderiam
+        // travar uma à outra para sempre.
+        UUID firstId = sourceId.compareTo(targetId) < 0 ? sourceId : targetId;
+        UUID secondId = firstId.equals(sourceId) ? targetId : sourceId;
+        Wallet first = lockWallet(firstId);
+        Wallet second = lockWallet(secondId);
+        Wallet source = firstId.equals(sourceId) ? first : second;
+        Wallet target = firstId.equals(sourceId) ? second : first;
+
+        Optional<Transaction> replay = findReplay(sourceId, key, TransactionType.TRANSFER, amount);
+        if (replay.isPresent()) {
+            Transaction existing = replay.get();
+            if (!targetId.equals(existing.getTargetWallet().getId())) {
+                throw new IdempotencyKeyReuseException();
+            }
+            return existing;
+        }
+
+        source.debit(amount);
+        target.credit(amount);
+        return transactions.save(Transaction.transfer(source, target, amount, key));
+    }
+
+    private Wallet lockWallet(UUID walletId) {
+        return wallets.findByIdForUpdate(walletId).orElseThrow(() -> new WalletNotFoundException(walletId));
     }
 
     private Optional<Transaction> findReplay(UUID walletId, String key, TransactionType type, BigDecimal amount) {
