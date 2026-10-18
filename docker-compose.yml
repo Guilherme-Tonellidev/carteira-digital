@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17
+    container_name: carteira-db
+    environment:
+      POSTGRES_DB: carteira
+      POSTGRES_USER: carteira
+      POSTGRES_PASSWORD: carteira
+    ports:
+      # 5433 no host para não colidir com um PostgreSQL já instalado na máquina
+      - "5433:5432"
+    volumes:
+      - carteira-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carteira -d carteira"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  carteira-data:

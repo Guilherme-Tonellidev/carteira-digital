@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: carteira-digital
+
+  datasource:
+    # Valores padrão são apenas para desenvolvimento local (docker-compose.yml).
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/carteira}
+    username: ${DB_USER:carteira}
+    password: ${DB_PASSWORD:carteira}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # O schema é responsabilidade do Flyway; o Hibernate só confere se bate com as entidades.
+      ddl-auto: validate
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

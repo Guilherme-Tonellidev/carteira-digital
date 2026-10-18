@@ -1,0 +1,60 @@
+# Requisições de teste para a extensão "REST Client" (humao.rest-client) do VS Code.
+# Clique em "Send Request" acima de cada bloco, na ordem.
+
+@baseUrl = http://localhost:8080
+
+### 1. Criar usuário (a carteira é criada junto). Rodando de novo com o mesmo e-mail dá 409.
+# @name createUser
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Ana Souza",
+  "email": "ana@email.com",
+  "password": "senha1234"
+}
+
+### 2. Consultar a carteira (saldo 0.00)
+GET {{baseUrl}}/wallets/{{createUser.response.body.walletId}}
+
+### 3. Depositar 100,50
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
+Content-Type: application/json
+Idempotency-Key: dep-001
+
+{ "amount": 100.50 }
+
+### 4. Reenviar o MESMO depósito (mesma Idempotency-Key): devolve a operação original, saldo não muda
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
+Content-Type: application/json
+Idempotency-Key: dep-001
+
+{ "amount": 100.50 }
+
+### 5. Sacar 30
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/withdraw
+Content-Type: application/json
+
+{ "amount": 30 }
+
+### 6. Saque maior que o saldo: 422 Saldo insuficiente
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/withdraw
+Content-Type: application/json
+
+{ "amount": 9999 }
+
+### 7. Valor inválido (3 casas decimais): 400 Dados inválidos
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
+Content-Type: application/json
+
+{ "amount": 10.555 }
+
+### 8. Idempotency-Key reutilizada com outro valor: 422
+POST {{baseUrl}}/wallets/{{createUser.response.body.walletId}}/deposit
+Content-Type: application/json
+Idempotency-Key: dep-001
+
+{ "amount": 5 }
+
+### 9. Carteira inexistente: 404
+GET {{baseUrl}}/wallets/00000000-0000-0000-0000-000000000000
