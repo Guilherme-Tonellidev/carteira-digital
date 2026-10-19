@@ -4,8 +4,8 @@
   --text: #1b2733;
   --muted: #667684;
   --border: #dde3e9;
-  --primary: #0f766e;
-  --primary-hover: #0b5f58;
+  --primary: #c2410c;
+  --primary-hover: #9a3412;
   --danger: #b42318;
   --danger-bg: #fef3f2;
   --success: #067647;
@@ -23,8 +23,8 @@
     --text: #e7edf3;
     --muted: #93a3b3;
     --border: #2a3846;
-    --primary: #2dd4bf;
-    --primary-hover: #5eead4;
+    --primary: #fb923c;
+    --primary-hover: #fdba74;
     --danger: #fda29b;
     --danger-bg: #3b1d1b;
     --success: #75e0a7;
@@ -179,7 +179,7 @@ button.primary:hover:not(:disabled) {
 
 @media (prefers-color-scheme: dark) {
   button.primary {
-    color: #06231f;
+  color: #1c0f03;
   }
 }
 
