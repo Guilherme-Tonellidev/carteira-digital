@@ -1,0 +1,349 @@
+:root {
+  --bg: #f3f5f7;
+  --card: #ffffff;
+  --text: #1b2733;
+  --muted: #667684;
+  --border: #dde3e9;
+  --primary: #0f766e;
+  --primary-hover: #0b5f58;
+  --danger: #b42318;
+  --danger-bg: #fef3f2;
+  --success: #067647;
+  --success-bg: #ecfdf3;
+  --info: #175cd3;
+  --info-bg: #eff8ff;
+  --radius: 14px;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1720;
+    --card: #17212c;
+    --text: #e7edf3;
+    --muted: #93a3b3;
+    --border: #2a3846;
+    --primary: #2dd4bf;
+    --primary-hover: #5eead4;
+    --danger: #fda29b;
+    --danger-bg: #3b1d1b;
+    --success: #75e0a7;
+    --success-bg: #14301f;
+    --info: #84caff;
+    --info-bg: #14283d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+h1,
+h2 {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+}
+
+.container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.block {
+  display: block;
+}
+
+.hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+/* ---------- autenticação ---------- */
+
+.auth {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card h1 {
+  text-align: center;
+}
+
+.auth-card > .muted {
+  text-align: center;
+  margin: 4px 0 16px;
+}
+
+/* ---------- formulários ---------- */
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+input,
+select {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button.primary {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+@media (prefers-color-scheme: dark) {
+  button.primary {
+    color: #06231f;
+  }
+}
+
+button.ghost {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+}
+
+button.ghost:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+button.small {
+  padding: 5px 10px;
+  font-size: 0.85rem;
+}
+
+button.link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* ---------- abas ---------- */
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: var(--bg);
+  border-radius: 12px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.tab.active {
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+}
+
+/* ---------- avisos ---------- */
+
+.alert {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+}
+
+.alert.error {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.alert.success {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.alert.info {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+/* ---------- saldo ---------- */
+
+.balance {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.balance-value {
+  font-size: 2.2rem;
+  line-height: 1.2;
+}
+
+.wallet-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.wallet-id code {
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: var(--bg);
+  word-break: break-all;
+}
+
+/* ---------- extrato ---------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.table .right {
+  text-align: right;
+}
+
+.amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.amount.credit {
+  color: var(--success);
+}
+
+.amount.debit {
+  color: var(--danger);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 0.9rem;
+}

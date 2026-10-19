@@ -8,6 +8,8 @@ API REST de carteira digital: o usuário cria uma conta, deposita, saca e transf
 
 Java 21 · Spring Boot · Spring Data JPA · Spring Security (JWT) · PostgreSQL · Flyway · Docker Compose · JUnit 5 · Testcontainers · OpenAPI/Swagger
 
+**Front-end:** React · TypeScript · Vite
+
 ## Como rodar
 
 Pré-requisitos: JDK 21+, Maven e Docker.
@@ -24,6 +26,20 @@ curl http://localhost:8080/actuator/health
 ```
 
 A resposta esperada é `{"status":"UP"}`. A configuração do banco pode ser trocada pelas variáveis `DB_URL`, `DB_USER` e `DB_PASSWORD`. O segredo do JWT vem de `JWT_SECRET`; o valor padrão do `application.yml` serve **apenas para desenvolvimento**.
+
+## Front-end
+
+Interface em React + TypeScript (Vite), na pasta `frontend/`: cadastro e login, saldo, depósito, saque, transferência e extrato com filtros e paginação.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Abra `http://localhost:5173` com a API rodando na porta 8080 (requer Node 20.19+ ou 22.12+). O servidor de desenvolvimento do Vite repassa as chamadas de `/api` para o back-end, então não há problema de CORS.
+
+Para testar uma transferência, abra duas abas do navegador: o token fica no `sessionStorage`, então cada aba pode ter um usuário diferente logado. Copie o ID da carteira de um usuário (botão **Copiar**) e use como destino no outro.
 
 ## Modelo de dados
 
@@ -93,4 +109,4 @@ Precisa do Docker rodando: os testes de integração sobem um PostgreSQL descart
 - [x] Extrato paginado
 - [x] Testes de integração e teste de concorrência
 - [x] Documentação da API (Swagger)
-- [ ] Front-end em React
+- [x] Front-end em React
