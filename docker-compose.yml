@@ -1,3 +1,6 @@
+# Sobe tudo:        docker compose up --build
+# Só o banco (dev): docker compose up -d db
+
 services:
   db:
     image: postgres:17
@@ -16,6 +19,37 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  backend:
+    build: .
+    container_name: carteira-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Dentro da rede do Docker o banco é "db", na porta 5432 (a 5433 é só do lado do host).
+      DB_URL: jdbc:postgresql://db:5432/carteira
+      DB_USER: carteira
+      DB_PASSWORD: carteira
+      # Valores de desenvolvimento: em outro ambiente defina JWT_SECRET (e as senhas do banco) por conta própria.
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-in-production-32b}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    build: ./frontend
+    container_name: carteira-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
 
 volumes:
   carteira-data:

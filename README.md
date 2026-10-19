@@ -27,6 +27,24 @@ curl http://localhost:8080/actuator/health
 
 A resposta esperada é `{"status":"UP"}`. A configuração do banco pode ser trocada pelas variáveis `DB_URL`, `DB_USER` e `DB_PASSWORD`. O segredo do JWT vem de `JWT_SECRET`; o valor padrão do `application.yml` serve **apenas para desenvolvimento**.
 
+## Rodando tudo com Docker
+
+Um comando sobe o banco, a API e o front-end (precisa só do Docker):
+
+```bash
+docker compose up --build
+```
+
+| Serviço | Endereço |
+|---|---|
+| Front-end | http://localhost:3000 |
+| API e Swagger | http://localhost:8080/swagger-ui.html |
+| PostgreSQL (a partir da sua máquina) | `localhost:5433` |
+
+A primeira execução demora alguns minutos porque baixa as imagens e compila os dois projetos. Pare qualquer `mvn spring-boot:run` ou `npm run dev` antes, porque a porta 8080 é a mesma. Para encerrar use `docker compose down` (os dados continuam salvos) ou `docker compose down -v` (apaga também o banco).
+
+Para desenvolver sem containers de aplicação, suba só o banco com `docker compose up -d db` e rode a API e o front pelos passos abaixo. As senhas e o segredo do JWT que aparecem no `docker-compose.yml` são apenas para desenvolvimento.
+
 ## Front-end
 
 Interface em React + TypeScript (Vite), na pasta `frontend/`: cadastro e login, saldo, depósito, saque, transferência e extrato com filtros e paginação.
