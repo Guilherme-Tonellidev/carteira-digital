@@ -82,6 +82,16 @@ class ApiIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    @DisplayName("a documentação OpenAPI e o Swagger UI são públicos e descrevem a API")
+    void openApiDocsArePublic() throws Exception {
+        HttpResponse<String> docs = send("GET", "/v3/api-docs", null, null);
+
+        assertThat(docs.statusCode()).isEqualTo(200);
+        assertThat(docs.body()).contains("/wallets/{id}/transfer").contains("bearerAuth");
+        assertThat(send("GET", "/swagger-ui/index.html", null, null).statusCode()).isEqualTo(200);
+    }
+
+    @Test
     @DisplayName("login com senha errada ou e-mail inexistente dá 401")
     void invalidCredentialsAreRejected() throws Exception {
         Account ana = createAccount();

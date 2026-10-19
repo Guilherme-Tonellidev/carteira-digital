@@ -1,6 +1,10 @@
 package com.guilhermetonelli.carteiradigital.user;
 
 import com.guilhermetonelli.carteiradigital.wallet.Wallet;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/users")
+@Tag(name = "Usuários")
 public class UserController {
 
     private final UserService userService;
@@ -21,6 +26,10 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Cadastra um usuário e cria a carteira dele (saldo zero)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "409", description = "E-mail já cadastrado")})
     public UserResponse register(@Valid @RequestBody CreateUserRequest request) {
         Wallet wallet = userService.register(request.name(), request.email(), request.password());
         User user = wallet.getUser();

@@ -6,7 +6,7 @@ API REST de carteira digital: o usuário cria uma conta, deposita, saca e transf
 
 ## Stack
 
-Java 21 · Spring Boot · Spring Data JPA · Spring Security (JWT) · PostgreSQL · Flyway · Docker Compose · JUnit 5 · Testcontainers
+Java 21 · Spring Boot · Spring Data JPA · Spring Security (JWT) · PostgreSQL · Flyway · Docker Compose · JUnit 5 · Testcontainers · OpenAPI/Swagger
 
 ## Como rodar
 
@@ -63,7 +63,9 @@ users 1 ──── 1 wallets 1 ──── N transactions
 | `GET` | `/wallets/{id}/transactions` | Extrato paginado; filtros opcionais `type`, `from`, `to`, `page`, `size` |
 | `POST` | `/wallets/{id}/transfer` | Transfere para outra carteira (`{"targetWalletId": "...", "amount": 20}`) |
 
-Exceto `POST /users`, `POST /auth/login` e `/actuator/health`, todas as rotas exigem o cabeçalho `Authorization: Bearer <token>`. Depósito, saque e a origem da transferência só funcionam na carteira do próprio usuário; o destino da transferência pode ser qualquer carteira.
+A documentação interativa (Swagger UI) fica em `http://localhost:8080/swagger-ui.html`: faça login em `POST /auth/login`, clique em **Authorize** e cole o `accessToken` para testar as rotas protegidas. O JSON da especificação está em `/v3/api-docs`.
+
+Exceto `POST /users`, `POST /auth/login`, `/actuator/health` e a documentação, todas as rotas exigem o cabeçalho `Authorization: Bearer <token>`. Depósito, saque e a origem da transferência só funcionam na carteira do próprio usuário; o destino da transferência pode ser qualquer carteira.
 
 Depósito, saque e transferência aceitam o cabeçalho opcional `Idempotency-Key`: reenviar a mesma operação com a mesma chave devolve a transação original, sem mexer no saldo outra vez. Erros seguem o formato `ProblemDetail` (RFC 7807). O arquivo `requests.http` tem exemplos prontos para a extensão REST Client do VS Code.
 
@@ -90,5 +92,5 @@ Precisa do Docker rodando: os testes de integração sobem um PostgreSQL descart
 - [x] Autenticação com JWT
 - [x] Extrato paginado
 - [x] Testes de integração e teste de concorrência
-- [ ] Documentação da API (Swagger)
+- [x] Documentação da API (Swagger)
 - [ ] Front-end em React
