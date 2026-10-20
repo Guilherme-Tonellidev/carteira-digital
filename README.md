@@ -1,6 +1,6 @@
 # Carteira Digital
 
-API REST de carteira digital: o usuário cria uma conta, deposita, saca e transfere dinheiro para outros usuários, e consulta o extrato. O foco do projeto é **consistência financeira**: saldo nunca negativo, histórico imutável e transferências seguras mesmo com requisições simultâneas.
+Aplicação full stack de carteira digital, com API REST em Java/Spring Boot e interface em React: o usuário cria uma conta, deposita, saca e transfere dinheiro para outros usuários, e consulta o extrato. O foco do projeto é **consistência financeira**: saldo nunca negativo, histórico imutável e transferências seguras mesmo com requisições simultâneas.
 
 **Status:** funcional, com todos os itens do roadmap concluídos.
 
@@ -16,30 +16,13 @@ API REST de carteira digital: o usuário cria uma conta, deposita, saca e transf
 
 ## Stack
 
-Java 21 · Spring Boot · Spring Data JPA · Spring Security (JWT) · PostgreSQL · Flyway · Docker Compose · JUnit 5 · Testcontainers · OpenAPI/Swagger
+Java 21 · Spring Boot · Spring Data JPA · Spring Security (JWT) · PostgreSQL · Flyway · Docker Compose · Nginx · JUnit 5 · Testcontainers · OpenAPI/Swagger
 
 **Front-end:** React · TypeScript · Vite
 
-## Como rodar
+## Início rápido (Docker)
 
-Pré-requisitos: JDK 21+, Maven e Docker.
-
-```bash
-# 1. subir o PostgreSQL (porta 5433 no host)
-docker compose up -d
-
-# 2. rodar a aplicação (o Flyway cria as tabelas na primeira execução)
-mvn spring-boot:run
-
-# 3. conferir se subiu
-curl http://localhost:8080/actuator/health
-```
-
-A resposta esperada é `{"status":"UP"}`. A configuração do banco pode ser trocada pelas variáveis `DB_URL`, `DB_USER` e `DB_PASSWORD`. O segredo do JWT vem de `JWT_SECRET`; o valor padrão do `application.yml` serve **apenas para desenvolvimento**.
-
-## Rodando tudo com Docker
-
-Um comando sobe o banco, a API e o front-end (precisa só do Docker):
+Precisa apenas do Docker. Um comando sobe o banco, a API e o front-end:
 
 ```bash
 docker compose up --build
@@ -51,11 +34,28 @@ docker compose up --build
 | API e Swagger | http://localhost:8080/swagger-ui.html |
 | PostgreSQL (a partir da sua máquina) | `localhost:5433` |
 
-A primeira execução demora alguns minutos porque baixa as imagens e compila os dois projetos. Pare qualquer `mvn spring-boot:run` ou `npm run dev` antes, porque a porta 8080 é a mesma. Para encerrar use `docker compose down` (os dados continuam salvos) ou `docker compose down -v` (apaga também o banco).
+Não existe usuário padrão: crie uma conta na tela inicial. Se o `localhost` não abrir no seu navegador, use `127.0.0.1` no lugar.
 
-Para desenvolver sem containers de aplicação, suba só o banco com `docker compose up -d db` e rode a API e o front pelos passos abaixo. As senhas e o segredo do JWT que aparecem no `docker-compose.yml` são apenas para desenvolvimento.
+A primeira execução demora alguns minutos porque baixa as imagens e compila os dois projetos. Pare qualquer `mvn spring-boot:run` ou `npm run dev` antes, porque a porta 8080 é a mesma. Para encerrar use `docker compose down` (os dados continuam salvos) ou `docker compose down -v` (apaga também o banco). As senhas e o segredo do JWT que aparecem no `docker-compose.yml` são apenas para desenvolvimento.
 
-## Front-end
+## Desenvolvimento local
+
+Pré-requisitos: JDK 21+, Maven, Docker e, para o front-end, Node 20.19+ ou 22.12+.
+
+```bash
+# 1. subir só o PostgreSQL (porta 5433 no host)
+docker compose up -d db
+
+# 2. rodar a API (o Flyway cria as tabelas na primeira execução)
+mvn spring-boot:run
+
+# 3. conferir se subiu
+curl http://localhost:8080/actuator/health
+```
+
+A resposta esperada é `{"status":"UP"}`. A configuração do banco pode ser trocada pelas variáveis `DB_URL`, `DB_USER` e `DB_PASSWORD`. O segredo do JWT vem de `JWT_SECRET`; o valor padrão do `application.yml` serve **apenas para desenvolvimento**.
+
+## Front-end (desenvolvimento)
 
 Interface em React + TypeScript (Vite), na pasta `frontend/`: cadastro e login, saldo, depósito, saque, transferência e extrato com filtros e paginação.
 
@@ -119,7 +119,7 @@ Depósito, saque e transferência aceitam o cabeçalho opcional `Idempotency-Key
 mvn test
 ```
 
-Precisa do Docker rodando: os testes de integração sobem um PostgreSQL descartável com Testcontainers, então as migrations do Flyway também são exercitadas de verdade.
+São 36 testes. Precisam do Docker rodando: os testes de integração sobem um PostgreSQL descartável com Testcontainers, então as migrations do Flyway também são exercitadas de verdade.
 
 | Classe | O que cobre |
 |---|---|
@@ -138,3 +138,11 @@ Precisa do Docker rodando: os testes de integração sobem um PostgreSQL descart
 - [x] Testes de integração e teste de concorrência
 - [x] Documentação da API (Swagger)
 - [x] Front-end em React
+
+### Ideias futuras
+
+- Integração contínua com GitHub Actions (build e testes a cada push)
+- Transferência por e-mail do destinatário, em vez do ID da carteira
+- Refresh token e encerramento de sessão no servidor
+- Limite de tentativas de login
+- Perfil de produção (segredos por variável de ambiente e HTTPS)
