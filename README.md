@@ -2,7 +2,17 @@
 
 API REST de carteira digital: o usuário cria uma conta, deposita, saca e transfere dinheiro para outros usuários, e consulta o extrato. O foco do projeto é **consistência financeira**: saldo nunca negativo, histórico imutável e transferências seguras mesmo com requisições simultâneas.
 
-**Status:** em desenvolvimento.
+**Status:** funcional, com todos os itens do roadmap concluídos.
+
+## Demonstração
+
+| Login | Painel (saldo, operações e extrato) |
+|---|---|
+| ![Tela de login](docs/images/login.png) | ![Painel com saldo, operações e extrato](docs/images/painel.png) |
+
+| Documentação interativa (Swagger) | Testes automatizados |
+|---|---|
+| ![Swagger UI](docs/images/swagger.png) | ![Testes passando](docs/images/testes.png) |
 
 ## Stack
 
